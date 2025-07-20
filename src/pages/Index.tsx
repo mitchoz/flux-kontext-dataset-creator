@@ -20,6 +20,7 @@ const Index = () => {
   const [openaiApiKey, setOpenaiApiKey] = useState("");
   const [aspectRatio, setAspectRatio] = useState("1024x1024");
   const [mode, setMode] = useState<LetzAIMode>("turbo");
+  const [startingNumber, setStartingNumber] = useState(1);
   const [queue, setQueue] = useState<QueueItemData[]>([]);
   
   // Process queue automatically
@@ -141,12 +142,16 @@ const Index = () => {
       return;
     }
 
+    const queueIndex = queue.filter(item => item.status !== 'error').length;
+    const imageNumber = startingNumber + queueIndex;
+
     const newItem: QueueItemData = {
       id: crypto.randomUUID(),
       beforePrompt,
       afterPrompt,
       aspectRatio,
       mode,
+      imageNumber,
       timestamp: new Date(),
       status: 'pending',
       progress: 0,
@@ -163,12 +168,37 @@ const Index = () => {
     toast.success("Item removed from queue");
   };
 
-  const handleDownloadItem = (id: string) => {
+  const handleDownloadItem = async (id: string) => {
     const item = queue.find(q => q.id === id);
     if (!item || !item.beforeImage || !item.afterImage) return;
     
-    // TODO: Implement download functionality
-    toast.success("Download functionality coming soon!");
+    try {
+      const paddedNumber = item.imageNumber.toString().padStart(4, '0');
+      
+      // Download before image
+      const beforeResponse = await fetch(item.beforeImage);
+      const beforeBlob = await beforeResponse.blob();
+      const beforeUrl = URL.createObjectURL(beforeBlob);
+      const beforeLink = document.createElement('a');
+      beforeLink.href = beforeUrl;
+      beforeLink.download = `${paddedNumber}_start.jpg`;
+      beforeLink.click();
+      URL.revokeObjectURL(beforeUrl);
+      
+      // Download after image  
+      const afterResponse = await fetch(item.afterImage);
+      const afterBlob = await afterResponse.blob();
+      const afterUrl = URL.createObjectURL(afterBlob);
+      const afterLink = document.createElement('a');
+      afterLink.href = afterUrl;
+      afterLink.download = `${paddedNumber}_end.jpg`;
+      afterLink.click();
+      URL.revokeObjectURL(afterUrl);
+      
+      toast.success(`Downloaded ${paddedNumber}_start.jpg and ${paddedNumber}_end.jpg`);
+    } catch (error) {
+      toast.error("Failed to download images");
+    }
   };
 
   const handleClearCompleted = () => {
@@ -254,7 +284,7 @@ const Index = () => {
               />
             </div>
             
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-3 gap-6">
               <AspectRatioSelector
                 value={aspectRatio}
                 onChange={setAspectRatio}
@@ -263,6 +293,20 @@ const Index = () => {
                 value={mode}
                 onChange={setMode}
               />
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Starting Number</label>
+                <input
+                  type="number"
+                  value={startingNumber}
+                  onChange={(e) => setStartingNumber(parseInt(e.target.value) || 1)}
+                  min="1"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="1"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Images will be named: {startingNumber.toString().padStart(4, '0')}_start.jpg, {startingNumber.toString().padStart(4, '0')}_end.jpg
+                </p>
+              </div>
             </div>
             
             <Separator />

@@ -9,6 +9,7 @@ export interface QueueItemData {
   afterPrompt: string;
   aspectRatio: string;
   mode: string;
+  imageNumber: number;
   timestamp: Date;
   status: 'pending' | 'letzai-processing' | 'openai-processing' | 'completed' | 'error';
   progress: number;
@@ -70,7 +71,7 @@ export const QueueItem = ({ item, onRemove, onDownload }: QueueItemProps) => {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">
-                {item.aspectRatio}
+                #{item.imageNumber.toString().padStart(4, '0')} • {item.aspectRatio}
               </span>
               <Button
                 variant="ghost"
