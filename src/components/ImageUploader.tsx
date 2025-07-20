@@ -112,7 +112,7 @@ export const ImageUploader = ({ onImagesChange, images }: ImageUploaderProps) =>
           </div>
           
           <div className="flex-1 overflow-y-auto min-h-0 border border-border rounded-md p-2">
-            <div className="grid grid-cols-2 gap-2">
+            <div className={`grid gap-2 ${images.length >= 4 ? 'grid-cols-4' : 'grid-cols-2'}`}>
               {images.map((image, index) => (
                 <div key={index} className="relative group">
                   <div className="aspect-square bg-secondary rounded-md overflow-hidden border">
