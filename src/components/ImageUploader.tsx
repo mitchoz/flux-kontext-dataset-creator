@@ -62,7 +62,9 @@ export const ImageUploader = ({ onImagesChange, images }: ImageUploaderProps) =>
       
       {/* Drop Zone */}
       <div
-        className={`relative border-2 border-dashed rounded-lg p-6 transition-colors flex-1 ${
+        className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
+          images.length > 0 ? 'h-32' : 'flex-1'
+        } ${
           isDragging 
             ? 'border-primary bg-secondary/50' 
             : 'border-border bg-secondary/20 hover:bg-secondary/30'
@@ -87,38 +89,39 @@ export const ImageUploader = ({ onImagesChange, images }: ImageUploaderProps) =>
         </div>
       </div>
 
-      {/* Image Preview Grid */}
+      {/* Image Preview Grid - Scrollable */}
       {images.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {images.map((image, index) => (
-            <div key={index} className="relative group">
-              <div className="aspect-square bg-secondary rounded-lg overflow-hidden border">
-                <img
-                  src={URL.createObjectURL(image)}
-                  alt={`Upload ${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <Button
-                variant="destructive"
-                size="sm"
-                className="absolute -top-2 -right-2 w-6 h-6 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => removeImage(index)}
-              >
-                <X className="w-3 h-3" />
-              </Button>
-              <p className="text-xs text-muted-foreground mt-1 truncate">
-                {image.name}
-              </p>
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+            <ImageIcon className="w-4 h-4" />
+            <span>{images.length} image{images.length !== 1 ? 's' : ''} selected</span>
+          </div>
+          <div className="overflow-y-auto flex-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pb-2">
+              {images.map((image, index) => (
+                <div key={index} className="relative group">
+                  <div className="aspect-square bg-secondary rounded-lg overflow-hidden border">
+                    <img
+                      src={URL.createObjectURL(image)}
+                      alt={`Upload ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => removeImage(index)}
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-1 truncate">
+                    {image.name}
+                  </p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
-
-      {images.length > 0 && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <ImageIcon className="w-4 h-4" />
-          <span>{images.length} image{images.length !== 1 ? 's' : ''} selected</span>
+          </div>
         </div>
       )}
     </div>
