@@ -175,28 +175,60 @@ const Index = () => {
     try {
       const paddedNumber = item.imageNumber.toString().padStart(4, '0');
       
-      // Download before image
-      const beforeResponse = await fetch(item.beforeImage);
-      const beforeBlob = await beforeResponse.blob();
-      const beforeUrl = URL.createObjectURL(beforeBlob);
-      const beforeLink = document.createElement('a');
-      beforeLink.href = beforeUrl;
-      beforeLink.download = `${paddedNumber}_start.jpg`;
-      beforeLink.click();
-      URL.revokeObjectURL(beforeUrl);
+      // Helper function to convert image to JPEG and download
+      const downloadAsJpeg = async (imageUrl: string, filename: string) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        
+        return new Promise<void>((resolve, reject) => {
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            if (!ctx) {
+              reject(new Error('Could not get canvas context'));
+              return;
+            }
+            
+            canvas.width = img.width;
+            canvas.height = img.height;
+            
+            // Fill with white background for JPEG
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw the image
+            ctx.drawImage(img, 0, 0);
+            
+            // Convert to JPEG blob
+            canvas.toBlob((blob) => {
+              if (!blob) {
+                reject(new Error('Failed to create blob'));
+                return;
+              }
+              
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = filename;
+              link.click();
+              URL.revokeObjectURL(url);
+              resolve();
+            }, 'image/jpeg', 0.9);
+          };
+          
+          img.onerror = () => reject(new Error('Failed to load image'));
+          img.src = imageUrl;
+        });
+      };
       
-      // Download after image  
-      const afterResponse = await fetch(item.afterImage);
-      const afterBlob = await afterResponse.blob();
-      const afterUrl = URL.createObjectURL(afterBlob);
-      const afterLink = document.createElement('a');
-      afterLink.href = afterUrl;
-      afterLink.download = `${paddedNumber}_end.jpg`;
-      afterLink.click();
-      URL.revokeObjectURL(afterUrl);
+      // Download both images
+      await downloadAsJpeg(item.beforeImage, `${paddedNumber}_start.jpg`);
+      await downloadAsJpeg(item.afterImage, `${paddedNumber}_end.jpg`);
       
       toast.success(`Downloaded ${paddedNumber}_start.jpg and ${paddedNumber}_end.jpg`);
     } catch (error) {
+      console.error('Download error:', error);
       toast.error("Failed to download images");
     }
   };
