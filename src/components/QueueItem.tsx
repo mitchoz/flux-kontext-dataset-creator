@@ -17,6 +17,7 @@ export interface QueueItemData {
   beforeImage?: string;
   afterImage?: string;
   error?: string;
+  uploadedFile?: File;
 }
 
 interface QueueItemProps {
@@ -101,7 +102,12 @@ export const QueueItem = ({ item, onRemove, onDownload }: QueueItemProps) => {
 
           {/* Prompts */}
           <div className="text-sm space-y-1">
-            <p><span className="text-muted-foreground">Before:</span> {item.beforePrompt}</p>
+            {item.beforePrompt && (
+              <p><span className="text-muted-foreground">Before:</span> {item.beforePrompt}</p>
+            )}
+            {item.uploadedFile && (
+              <p><span className="text-muted-foreground">Uploaded:</span> {item.uploadedFile.name}</p>
+            )}
             <p><span className="text-muted-foreground">After:</span> {item.afterPrompt}</p>
           </div>
 
@@ -110,7 +116,9 @@ export const QueueItem = ({ item, onRemove, onDownload }: QueueItemProps) => {
             <div className="grid grid-cols-2 gap-4">
               {item.beforeImage && (
                 <div>
-                  <p className="text-xs text-muted-foreground mb-2">Before (LetzAI)</p>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Before {item.uploadedFile ? '(Uploaded)' : '(LetzAI)'}
+                  </p>
                   <div className="w-full rounded-md border overflow-hidden">
                     <img 
                       src={item.beforeImage} 

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { PromptInput } from "@/components/PromptInput";
+import { ImageUploader } from "@/components/ImageUploader";
 import { ApiKeyInput } from "@/components/ApiKeyInput";
 import { AspectRatioSelector, aspectRatioOptions } from "@/components/AspectRatioSelector";
 import { ModeSelector, LetzAIMode } from "@/components/ModeSelector";
@@ -16,6 +17,7 @@ import { toast } from "sonner";
 const Index = () => {
   const [beforePrompt, setBeforePrompt] = useState("");
   const [afterPrompt, setAfterPrompt] = useState("");
+  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
   const [letzaiApiKey, setLetzaiApiKey] = useState("");
   const [openaiApiKey, setOpenaiApiKey] = useState("");
   const [aspectRatio, setAspectRatio] = useState("1024x1024");
@@ -33,46 +35,84 @@ const Index = () => {
       if (!selectedRatio) return;
 
       try {
-        // Update to processing status
-        setQueue(prev => prev.map(item => 
-          item.id === pendingItem.id 
-            ? { ...item, status: 'letzai-processing', message: 'Sending request to LetzAI...' }
-            : item
-        ));
+        let beforeImageUrl: string;
 
-        // Step 1: Generate with LetzAI
-        const letzaiService = new LetzAIService(letzaiApiKey);
-        const imageId = await letzaiService.generateImage(
-          pendingItem.beforePrompt,
-          selectedRatio.width,
-          selectedRatio.height,
-          pendingItem.mode
-        );
+        // Check if this is an uploaded image or needs LetzAI generation
+        if (pendingItem.uploadedFile) {
+          // Handle uploaded image
+          setQueue(prev => prev.map(item => 
+            item.id === pendingItem.id 
+              ? { ...item, status: 'openai-processing', message: 'Preparing uploaded image...' }
+              : item
+          ));
 
-        // Poll for completion
-        const beforeImageUrl = await letzaiService.waitForCompletion(
-          imageId,
-          (progress, message) => {
-            setQueue(prev => prev.map(item => 
-              item.id === pendingItem.id 
-                ? { ...item, progress, message }
-                : item
-            ));
-          }
-        );
-
-        // Update with before image and start OpenAI processing
-        setQueue(prev => prev.map(item => 
-          item.id === pendingItem.id 
-            ? { 
-                ...item, 
-                status: 'openai-processing',
-                progress: 0,
-                message: 'Preparing image for OpenAI...',
-                beforeImage: beforeImageUrl
+          // Convert uploaded file to data URL
+          beforeImageUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              if (e.target?.result && typeof e.target.result === 'string') {
+                resolve(e.target.result);
+              } else {
+                reject(new Error('Failed to read file'));
               }
-            : item
-        ));
+            };
+            reader.onerror = () => reject(new Error('Failed to read file'));
+            reader.readAsDataURL(pendingItem.uploadedFile!);
+          });
+
+          // Update with before image
+          setQueue(prev => prev.map(item => 
+            item.id === pendingItem.id 
+              ? { 
+                  ...item, 
+                  status: 'openai-processing',
+                  progress: 50,
+                  message: 'Processing with OpenAI...',
+                  beforeImage: beforeImageUrl
+                }
+              : item
+          ));
+        } else {
+          // Generate with LetzAI
+          setQueue(prev => prev.map(item => 
+            item.id === pendingItem.id 
+              ? { ...item, status: 'letzai-processing', message: 'Sending request to LetzAI...' }
+              : item
+          ));
+
+          const letzaiService = new LetzAIService(letzaiApiKey);
+          const imageId = await letzaiService.generateImage(
+            pendingItem.beforePrompt,
+            selectedRatio.width,
+            selectedRatio.height,
+            pendingItem.mode
+          );
+
+          // Poll for completion
+          beforeImageUrl = await letzaiService.waitForCompletion(
+            imageId,
+            (progress, message) => {
+              setQueue(prev => prev.map(item => 
+                item.id === pendingItem.id 
+                  ? { ...item, progress, message }
+                  : item
+              ));
+            }
+          );
+
+          // Update with before image and start OpenAI processing
+          setQueue(prev => prev.map(item => 
+            item.id === pendingItem.id 
+              ? { 
+                  ...item, 
+                  status: 'openai-processing',
+                  progress: 0,
+                  message: 'Preparing image for OpenAI...',
+                  beforeImage: beforeImageUrl
+                }
+              : item
+          ));
+        }
 
         // Step 2: Process with OpenAI
         const openaiService = new OpenAIService(openaiApiKey);
@@ -127,42 +167,93 @@ const Index = () => {
     // Process all pending items simultaneously
     const pendingItems = queue.filter(item => item.status === 'pending');
     pendingItems.forEach(item => {
-      if (letzaiApiKey && openaiApiKey) {
+      // For uploaded images, only OpenAI key is needed
+      // For LetzAI generation, both keys are needed
+      const canProcess = item.uploadedFile 
+        ? openaiApiKey 
+        : (letzaiApiKey && openaiApiKey);
+        
+      if (canProcess) {
         processItem(item.id);
       }
     });
   }, [queue, letzaiApiKey, openaiApiKey]);
 
   const handleAddToQueue = () => {
-    if (!beforePrompt.trim() || !afterPrompt.trim()) {
-      toast.error("Please enter both before and after prompts");
-      return;
-    }
-
-    if (!letzaiApiKey.trim() || !openaiApiKey.trim()) {
-      toast.error("Please enter both API keys");
-      return;
-    }
-
-    const queueIndex = queue.filter(item => item.status !== 'error').length;
-    const imageNumber = startingNumber + queueIndex;
-
-    const newItem: QueueItemData = {
-      id: crypto.randomUUID(),
-      beforePrompt,
-      afterPrompt,
-      aspectRatio,
-      mode,
-      imageNumber,
-      timestamp: new Date(),
-      status: 'pending',
-      progress: 0,
-      message: 'Waiting in queue...'
-    };
-
-    setQueue(prev => [newItem, ...prev]);
+    // Check if we have either a prompt or uploaded images for "before"
+    const hasBeforePrompt = beforePrompt.trim();
+    const hasUploadedImages = uploadedImages.length > 0;
     
-    toast.success("Added to generation queue!");
+    if (!hasBeforePrompt && !hasUploadedImages) {
+      toast.error("Please either enter a before prompt or upload images");
+      return;
+    }
+
+    if (!afterPrompt.trim()) {
+      toast.error("Please enter an after prompt for transformation");
+      return;
+    }
+
+    if (!openaiApiKey.trim()) {
+      toast.error("OpenAI API key is required for transformations");
+      return;
+    }
+
+    // If using LetzAI generation, require LetzAI API key
+    if (hasBeforePrompt && !hasUploadedImages && !letzaiApiKey.trim()) {
+      toast.error("LetzAI API key is required for image generation");
+      return;
+    }
+
+    // Add items for uploaded images
+    if (hasUploadedImages) {
+      uploadedImages.forEach((file, index) => {
+        const queueIndex = queue.filter(item => item.status !== 'error').length + index;
+        const imageNumber = startingNumber + queueIndex;
+
+        const newItem: QueueItemData = {
+          id: crypto.randomUUID(),
+          beforePrompt: '', // No prompt needed for uploaded images
+          afterPrompt,
+          aspectRatio,
+          mode,
+          imageNumber,
+          timestamp: new Date(),
+          status: 'pending',
+          progress: 0,
+          message: 'Waiting in queue...',
+          uploadedFile: file // Store the uploaded file
+        };
+
+        setQueue(prev => [newItem, ...prev]);
+      });
+      
+      // Clear uploaded images after adding to queue
+      setUploadedImages([]);
+      toast.success(`Added ${uploadedImages.length} uploaded images to queue!`);
+    }
+
+    // Add item for LetzAI generation if prompt is provided
+    if (hasBeforePrompt) {
+      const queueIndex = queue.filter(item => item.status !== 'error').length + uploadedImages.length;
+      const imageNumber = startingNumber + queueIndex;
+
+      const newItem: QueueItemData = {
+        id: crypto.randomUUID(),
+        beforePrompt,
+        afterPrompt,
+        aspectRatio,
+        mode,
+        imageNumber,
+        timestamp: new Date(),
+        status: 'pending',
+        progress: 0,
+        message: 'Waiting in queue...'
+      };
+
+      setQueue(prev => [newItem, ...prev]);
+      toast.success("Added LetzAI generation to queue!");
+    }
   };
 
   const handleRemoveItem = (id: string) => {
@@ -300,21 +391,36 @@ const Index = () => {
           </div>
           
           <div className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
+            {/* Before Section: Prompt (1fr) + Upload (1fr) */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Before Images</h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <PromptInput
+                  label="Generate with LetzAI"
+                  placeholder="Describe the initial image (e.g., 'A room in a house')"
+                  value={beforePrompt}
+                  onChange={setBeforePrompt}
+                  description="Generate images using LetzAI with this prompt"
+                />
+                
+                <ImageUploader
+                  images={uploadedImages}
+                  onImagesChange={setUploadedImages}
+                />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* After Section: Prompt only */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">After Transformation</h3>
               <PromptInput
-                label="Before Prompt"
-                placeholder="Describe the initial image (e.g., 'A room in a house')"
-                value={beforePrompt}
-                onChange={setBeforePrompt}
-                description="This will be used to generate the first image using LetzAI"
-              />
-              
-              <PromptInput
-                label="After Prompt"
+                label="OpenAI Transformation"
                 placeholder="Describe the transformation (e.g., 'Turn this into 3D tiny world')"
                 value={afterPrompt}
                 onChange={setAfterPrompt}
-                description="This will be used to process the first image with OpenAI"
+                description="This will be used to transform the images with OpenAI"
               />
             </div>
             
