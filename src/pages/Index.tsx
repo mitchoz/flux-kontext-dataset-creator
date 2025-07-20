@@ -222,7 +222,8 @@ const Index = () => {
           status: 'pending',
           progress: 0,
           message: 'Waiting in queue...',
-          uploadedFile: file // Store the uploaded file
+          uploadedFile: file, // Store the uploaded file
+          beforeImage: URL.createObjectURL(file) // Create blob URL for immediate preview
         };
 
         setQueue(prev => [newItem, ...prev]);
