@@ -107,7 +107,7 @@ export const ImageUploader = ({ onImagesChange, images, aspectRatio }: ImageUplo
   }, [images, onImagesChange]);
 
   return (
-    <div className="space-y-3 h-full max-h-[300px] flex flex-col">
+    <div className="space-y-3 flex flex-col">
       <div className="flex-shrink-0">
         <Label className="text-sm font-medium">Upload Images</Label>
         <p className="text-xs text-muted-foreground mt-1">
@@ -162,7 +162,7 @@ export const ImageUploader = ({ onImagesChange, images, aspectRatio }: ImageUplo
 
       {/* Image Preview - Takes remaining space with proper scrolling */}
       {images.length > 0 && (
-        <div className="flex-1 min-h-0 flex flex-col mt-2">
+        <div className="mt-2">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <ImageIcon className="w-4 h-4" />
@@ -178,7 +178,7 @@ export const ImageUploader = ({ onImagesChange, images, aspectRatio }: ImageUplo
             </Button>
           </div>
           
-          <div className="flex-1 overflow-y-auto min-h-0 border border-border rounded-md p-2">
+          <div className="border border-border rounded-md p-2">
             <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
               {images.map((image, index) => (
                 <div key={index} className="relative group">
