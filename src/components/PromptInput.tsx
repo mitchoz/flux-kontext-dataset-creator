@@ -17,7 +17,7 @@ export const PromptInput = ({
   description 
 }: PromptInputProps) => {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 h-full flex flex-col">
       <Label className="text-sm font-medium">{label}</Label>
       {description && (
         <p className="text-xs text-muted-foreground">{description}</p>
@@ -26,7 +26,7 @@ export const PromptInput = ({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="min-h-[100px] resize-none border-border bg-secondary/50 focus:bg-background transition-colors"
+        className="min-h-[100px] resize-none border-border bg-secondary/50 focus:bg-background transition-colors flex-1"
       />
     </div>
   );

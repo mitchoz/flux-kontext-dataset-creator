@@ -394,19 +394,30 @@ const Index = () => {
             {/* Before Section: Prompt (1fr) + Upload (1fr) */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Before Images</h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                <PromptInput
-                  label="Generate with LetzAI"
-                  placeholder="Describe the initial image (e.g., 'A room in a house')"
-                  value={beforePrompt}
-                  onChange={setBeforePrompt}
-                  description="Generate images using LetzAI with this prompt"
-                />
+              <div className="grid md:grid-cols-2 gap-6 h-[300px]">
+                <div className={`relative ${uploadedImages.length > 0 ? 'opacity-50 pointer-events-none' : ''}`}>
+                  {uploadedImages.length > 0 && (
+                    <div className="absolute inset-0 bg-background/80 rounded-lg z-10 flex items-center justify-center">
+                      <p className="text-sm text-muted-foreground font-medium">Upload mode active</p>
+                    </div>
+                  )}
+                  <div className="h-full">
+                    <PromptInput
+                      label="Generate with LetzAI"
+                      placeholder="Describe the initial image (e.g., 'A room in a house')"
+                      value={beforePrompt}
+                      onChange={setBeforePrompt}
+                      description="Generate images using LetzAI with this prompt"
+                    />
+                  </div>
+                </div>
                 
-                <ImageUploader
-                  images={uploadedImages}
-                  onImagesChange={setUploadedImages}
-                />
+                <div className="h-full">
+                  <ImageUploader
+                    images={uploadedImages}
+                    onImagesChange={setUploadedImages}
+                  />
+                </div>
               </div>
             </div>
 

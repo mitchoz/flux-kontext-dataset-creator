@@ -54,7 +54,7 @@ export const ImageUploader = ({ onImagesChange, images }: ImageUploaderProps) =>
   }, [images, onImagesChange]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2 h-full flex flex-col">
       <Label className="text-sm font-medium">Upload Images</Label>
       <p className="text-xs text-muted-foreground">
         Upload images to use as the "before" images instead of generating them
@@ -62,7 +62,7 @@ export const ImageUploader = ({ onImagesChange, images }: ImageUploaderProps) =>
       
       {/* Drop Zone */}
       <div
-        className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
+        className={`relative border-2 border-dashed rounded-lg p-6 transition-colors flex-1 ${
           isDragging 
             ? 'border-primary bg-secondary/50' 
             : 'border-border bg-secondary/20 hover:bg-secondary/30'
@@ -80,7 +80,7 @@ export const ImageUploader = ({ onImagesChange, images }: ImageUploaderProps) =>
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />
         
-        <div className="flex flex-col items-center justify-center text-center">
+        <div className="flex flex-col items-center justify-center text-center h-full">
           <Upload className="w-8 h-8 text-muted-foreground mb-2" />
           <p className="text-sm font-medium">Drop images here or click to browse</p>
           <p className="text-xs text-muted-foreground">Supports JPG, PNG, WebP</p>
