@@ -1,4 +1,18 @@
-# Welcome to your Lovable project
+# Flux Kontext Dataset Generator
+
+An open-source tool for generating image pairs to train your own Kontext LoRAs.
+
+## About
+
+Flux Kontext Dev lacks some capabilities compared to ChatGPT. So I've built this simple open-source tool you can use to generate image pairs using LetzAI and OpenAI APIs to train your own Kontext LoRAs.
+
+The tool creates "before" and "after" image pairs by:
+1. **Generating initial images** using LetzAI's fast image generation
+2. **Transforming them** using OpenAI's image editing capabilities
+3. **Organizing results** in a queue with progress tracking
+4. **Downloading pairs** with sequential numbering for easy dataset organization
+
+Perfect for creating training datasets for AI image models!
 
 ## Project info
 
