@@ -113,7 +113,8 @@ export const QueueItem = ({ item, onRemove, onDownload }: QueueItemProps) => {
                   <img 
                     src={item.beforeImage} 
                     alt="Before" 
-                    className="w-full h-32 object-cover rounded-md border"
+                    className="w-full h-32 object-cover rounded-md border cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => window.open(item.beforeImage, '_blank')}
                   />
                 </div>
               )}
@@ -123,7 +124,8 @@ export const QueueItem = ({ item, onRemove, onDownload }: QueueItemProps) => {
                   <img 
                     src={item.afterImage} 
                     alt="After" 
-                    className="w-full h-32 object-cover rounded-md border"
+                    className="w-full h-32 object-cover rounded-md border cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => window.open(item.afterImage, '_blank')}
                   />
                 </div>
               )}
