@@ -413,10 +413,11 @@ const Index = () => {
                 </div>
                 
                 <div className="h-full">
-                  <ImageUploader
-                    images={uploadedImages}
-                    onImagesChange={setUploadedImages}
-                  />
+                <ImageUploader
+                  images={uploadedImages}
+                  onImagesChange={setUploadedImages}
+                  aspectRatio={aspectRatio}
+                />
                 </div>
               </div>
             </div>
