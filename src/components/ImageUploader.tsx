@@ -107,19 +107,21 @@ export const ImageUploader = ({ onImagesChange, images, aspectRatio }: ImageUplo
   }, [images, onImagesChange]);
 
   return (
-    <div className="space-y-2 h-full flex flex-col">
-      <Label className="text-sm font-medium">Upload Images</Label>
-      <p className="text-xs text-muted-foreground">
-        Upload images to use as the "before" images instead of generating them
-      </p>
-      <p className="text-xs text-muted-foreground font-medium">
-        Images will be cropped and resized to {aspectRatio}
-      </p>
+    <div className="space-y-3 h-full flex flex-col min-h-0">
+      <div className="flex-shrink-0">
+        <Label className="text-sm font-medium">Upload Images</Label>
+        <p className="text-xs text-muted-foreground mt-1">
+          Upload images to use as the "before" images instead of generating them
+        </p>
+        <p className="text-xs text-muted-foreground font-medium">
+          Images will be cropped and resized to {aspectRatio}
+        </p>
+      </div>
       
       {/* Drop Zone - Shrinks when images are present */}
       <div
-        className={`relative border-2 border-dashed rounded-lg transition-colors ${
-          images.length > 0 ? 'h-20 p-3' : 'flex-1 p-6'
+        className={`relative border-2 border-dashed rounded-lg transition-colors flex-shrink-0 ${
+          images.length > 0 ? 'h-20 p-3' : 'min-h-[120px] p-6'
         } ${
           isDragging 
             ? 'border-primary bg-secondary/50' 
@@ -160,7 +162,7 @@ export const ImageUploader = ({ onImagesChange, images, aspectRatio }: ImageUplo
 
       {/* Image Preview - Takes remaining space with proper scrolling */}
       {images.length > 0 && (
-        <div className="flex-1 min-h-0 flex flex-col">
+        <div className="flex-1 min-h-0 flex flex-col mt-2">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <ImageIcon className="w-4 h-4" />
