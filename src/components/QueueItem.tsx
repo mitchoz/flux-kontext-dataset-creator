@@ -124,7 +124,18 @@ export const QueueItem = ({ item, onRemove, onDownload }: QueueItemProps) => {
                       src={item.beforeImage} 
                       alt="Before" 
                       className="w-full h-auto object-contain cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => window.open(item.beforeImage, '_blank')}
+                      onClick={() => {
+                        if (item.beforeImage.startsWith('blob:')) {
+                          // For blob URLs, open in new tab by creating a temporary link
+                          const link = document.createElement('a');
+                          link.href = item.beforeImage;
+                          link.target = '_blank';
+                          link.click();
+                        } else {
+                          // For regular URLs
+                          window.open(item.beforeImage, '_blank');
+                        }
+                      }}
                     />
                   </div>
                 </div>
