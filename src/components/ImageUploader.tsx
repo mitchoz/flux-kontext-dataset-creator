@@ -107,7 +107,7 @@ export const ImageUploader = ({ onImagesChange, images, aspectRatio }: ImageUplo
   }, [images, onImagesChange]);
 
   return (
-    <div className="space-y-3 h-full flex flex-col min-h-0">
+    <div className="space-y-3 h-full max-h-[300px] flex flex-col">
       <div className="flex-shrink-0">
         <Label className="text-sm font-medium">Upload Images</Label>
         <p className="text-xs text-muted-foreground mt-1">
