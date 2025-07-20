@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Key } from "lucide-react";
+import { Eye, EyeOff, Key, ExternalLink } from "lucide-react";
 
 interface ApiKeyInputProps {
   label: string;
@@ -14,12 +14,37 @@ interface ApiKeyInputProps {
 export const ApiKeyInput = ({ label, value, onChange, placeholder }: ApiKeyInputProps) => {
   const [showKey, setShowKey] = useState(false);
 
+  const getApiKeyUrl = (label: string) => {
+    if (label.toLowerCase().includes('letzai')) {
+      return 'http://letz.ai/subscription';
+    }
+    if (label.toLowerCase().includes('openai')) {
+      return 'https://platform.openai.com/api-keys';
+    }
+    return null;
+  };
+
+  const apiKeyUrl = getApiKeyUrl(label);
+
   return (
     <div className="space-y-2">
-      <Label className="text-sm font-medium flex items-center gap-2">
-        <Key className="w-4 h-4" />
-        {label}
-      </Label>
+      <div className="flex items-center justify-between">
+        <Label className="text-sm font-medium flex items-center gap-2">
+          <Key className="w-4 h-4" />
+          {label}
+        </Label>
+        {apiKeyUrl && (
+          <a
+            href={apiKeyUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+          >
+            Create key
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        )}
+      </div>
       <div className="relative">
         <Input
           type={showKey ? "text" : "password"}
