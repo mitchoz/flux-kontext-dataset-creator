@@ -156,10 +156,6 @@ const Index = () => {
 
     setQueue(prev => [...prev, newItem]);
     
-    // Clear prompts for next entry
-    setBeforePrompt("");
-    setAfterPrompt("");
-    
     toast.success("Added to generation queue!");
   };
 
