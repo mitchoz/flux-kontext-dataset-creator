@@ -111,38 +111,42 @@ export const QueueItem = ({ item, onRemove, onDownload }: QueueItemProps) => {
               {item.beforeImage && (
                 <div>
                   <p className="text-xs text-muted-foreground mb-2">Before (LetzAI)</p>
-                  <img 
-                    src={item.beforeImage} 
-                    alt="Before" 
-                    className="w-full h-32 object-cover rounded-md border cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => window.open(item.beforeImage, '_blank')}
-                  />
+                  <div className="w-full rounded-md border overflow-hidden">
+                    <img 
+                      src={item.beforeImage} 
+                      alt="Before" 
+                      className="w-full h-auto object-contain cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => window.open(item.beforeImage, '_blank')}
+                    />
+                  </div>
                 </div>
               )}
               {item.afterImage && (
                 <div>
                   <p className="text-xs text-muted-foreground mb-2">After (OpenAI)</p>
-                  <img 
-                    src={item.afterImage} 
-                    alt="After" 
-                    className="w-full h-32 object-cover rounded-md border cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => {
-                      if (item.afterImage.startsWith('data:')) {
-                        // For data URLs, create a blob and open it
-                        const byteCharacters = atob(item.afterImage.split(',')[1]);
-                        const byteNumbers = new Array(byteCharacters.length);
-                        for (let i = 0; i < byteCharacters.length; i++) {
-                          byteNumbers[i] = byteCharacters.charCodeAt(i);
+                  <div className="w-full rounded-md border overflow-hidden">
+                    <img 
+                      src={item.afterImage} 
+                      alt="After" 
+                      className="w-full h-auto object-contain cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => {
+                        if (item.afterImage.startsWith('data:')) {
+                          // For data URLs, create a blob and open it
+                          const byteCharacters = atob(item.afterImage.split(',')[1]);
+                          const byteNumbers = new Array(byteCharacters.length);
+                          for (let i = 0; i < byteCharacters.length; i++) {
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
+                          }
+                          const byteArray = new Uint8Array(byteNumbers);
+                          const blob = new Blob([byteArray], { type: 'image/jpeg' });
+                          const url = URL.createObjectURL(blob);
+                          window.open(url, '_blank');
+                        } else {
+                          window.open(item.afterImage, '_blank');
                         }
-                        const byteArray = new Uint8Array(byteNumbers);
-                        const blob = new Blob([byteArray], { type: 'image/jpeg' });
-                        const url = URL.createObjectURL(blob);
-                        window.open(url, '_blank');
-                      } else {
-                        window.open(item.afterImage, '_blank');
-                      }
-                    }}
-                  />
+                      }}
+                    />
+                  </div>
                 </div>
               )}
             </div>
