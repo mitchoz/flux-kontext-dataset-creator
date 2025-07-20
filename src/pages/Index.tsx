@@ -395,7 +395,7 @@ const Index = () => {
             {/* Before Section: Prompt (1fr) + Upload (1fr) */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Before Images</h3>
-              <div className={`grid md:grid-cols-2 gap-6 ${uploadedImages.length === 0 ? 'h-[300px]' : ''}`}>
+              <div className="grid md:grid-cols-2 gap-6 h-[300px]">
                 <div className={`relative ${uploadedImages.length > 0 ? 'opacity-50 pointer-events-none' : ''}`}>
                   {uploadedImages.length > 0 && (
                     <div className="absolute inset-0 bg-background/80 rounded-lg z-10 flex items-center justify-center">
