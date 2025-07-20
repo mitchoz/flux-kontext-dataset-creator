@@ -27,10 +27,7 @@ export const ModeSelector = ({ value, onChange }: ModeSelectorProps) => {
         <SelectContent>
           {modeOptions.map((option) => (
             <SelectItem key={option.value} value={option.value}>
-              <div className="flex flex-col">
-                <span>{option.label}</span>
-                <span className="text-xs text-muted-foreground">{option.description}</span>
-              </div>
+              {option.label}
             </SelectItem>
           ))}
         </SelectContent>
