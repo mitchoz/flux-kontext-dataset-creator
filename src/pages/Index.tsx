@@ -5,8 +5,21 @@ import { Separator } from "@/components/ui/separator";
 import { PromptInput } from "@/components/PromptInput";
 import { ApiKeyInput } from "@/components/ApiKeyInput";
 import { GenerationHistory, GeneratedPair } from "@/components/GenerationHistory";
+import { GenerationModal } from "@/components/GenerationModal";
+import { LetzAIService } from "@/services/letzai";
+import { OpenAIService } from "@/services/openai";
 import { Zap, Download, Settings, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+
+interface GenerationStep {
+  id: 'letzai' | 'openai';
+  title: string;
+  description: string;
+  status: 'pending' | 'in-progress' | 'completed' | 'error';
+  progress: number;
+  message: string;
+  result?: string;
+}
 
 const Index = () => {
   const [beforePrompt, setBeforePrompt] = useState("");
@@ -15,6 +28,8 @@ const Index = () => {
   const [openaiApiKey, setOpenaiApiKey] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [history, setHistory] = useState<GeneratedPair[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [generationSteps, setGenerationSteps] = useState<GenerationStep[]>([]);
 
   const handleGenerate = async () => {
     if (!beforePrompt.trim() || !afterPrompt.trim()) {
@@ -28,7 +43,30 @@ const Index = () => {
     }
 
     setIsGenerating(true);
+    setShowModal(true);
     
+    // Initialize steps
+    const initialSteps: GenerationStep[] = [
+      {
+        id: 'letzai',
+        title: 'Generate Initial Image',
+        description: 'Creating image with LetzAI based on your "before" prompt',
+        status: 'pending',
+        progress: 0,
+        message: 'Initializing...'
+      },
+      {
+        id: 'openai',
+        title: 'Transform Image',
+        description: 'Processing image with OpenAI based on your "after" prompt',
+        status: 'pending',
+        progress: 0,
+        message: 'Waiting for initial image...'
+      }
+    ];
+    
+    setGenerationSteps(initialSteps);
+
     // Create new pair entry
     const newPair: GeneratedPair = {
       id: crypto.randomUUID(),
@@ -39,17 +77,98 @@ const Index = () => {
     };
 
     setHistory(prev => [newPair, ...prev]);
-    
-    // Simulate API calls for now
-    setTimeout(() => {
+
+    try {
+      // Step 1: Generate with LetzAI
+      setGenerationSteps(prev => prev.map(step => 
+        step.id === 'letzai' 
+          ? { ...step, status: 'in-progress', message: 'Sending request to LetzAI...' }
+          : step
+      ));
+
+      const letzaiService = new LetzAIService(letzaiApiKey);
+      const imageId = await letzaiService.generateImage(beforePrompt);
+
+      // Poll for completion
+      const beforeImageUrl = await letzaiService.waitForCompletion(
+        imageId,
+        (progress, message) => {
+          setGenerationSteps(prev => prev.map(step => 
+            step.id === 'letzai' 
+              ? { ...step, progress, message }
+              : step
+          ));
+        }
+      );
+
+      setGenerationSteps(prev => prev.map(step => 
+        step.id === 'letzai' 
+          ? { ...step, status: 'completed', progress: 100, result: beforeImageUrl, message: 'Image generated successfully!' }
+          : step
+      ));
+
+      // Step 2: Process with OpenAI
+      setGenerationSteps(prev => prev.map(step => 
+        step.id === 'openai' 
+          ? { ...step, status: 'in-progress', message: 'Preparing image for OpenAI...' }
+          : step
+      ));
+
+      const openaiService = new OpenAIService(openaiApiKey);
+      const afterImageUrl = await openaiService.editImage(
+        beforeImageUrl,
+        afterPrompt,
+        (message) => {
+          setGenerationSteps(prev => prev.map(step => 
+            step.id === 'openai' 
+              ? { ...step, message }
+              : step
+          ));
+        }
+      );
+
+      setGenerationSteps(prev => prev.map(step => 
+        step.id === 'openai' 
+          ? { ...step, status: 'completed', progress: 100, result: afterImageUrl, message: 'Transformation complete!' }
+          : step
+      ));
+
+      // Update history with completed pair
       setHistory(prev => prev.map(pair => 
         pair.id === newPair.id 
-          ? { ...pair, status: 'completed' as const }
+          ? { 
+              ...pair, 
+              status: 'completed' as const,
+              beforeImage: beforeImageUrl,
+              afterImage: afterImageUrl
+            }
           : pair
       ));
-      setIsGenerating(false);
+
       toast.success("Image pair generated successfully!");
-    }, 3000);
+
+    } catch (error) {
+      console.error('Generation failed:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      
+      setGenerationSteps(prev => prev.map(step => {
+        if (step.status === 'in-progress') {
+          return { ...step, status: 'error', message: errorMessage };
+        }
+        return step;
+      }));
+
+      setHistory(prev => prev.map(pair => 
+        pair.id === newPair.id 
+          ? { ...pair, status: 'error' as const }
+          : pair
+      ));
+
+      toast.error(`Generation failed: ${errorMessage}`);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -163,6 +282,13 @@ const Index = () => {
           history={history}
           onDelete={handleDelete}
           onExport={handleExport}
+        />
+        
+        {/* Generation Modal */}
+        <GenerationModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          steps={generationSteps}
         />
       </div>
     </div>
