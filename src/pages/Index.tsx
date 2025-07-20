@@ -79,6 +79,8 @@ const Index = () => {
         const afterImageUrl = await openaiService.editImage(
           beforeImageUrl,
           pendingItem.afterPrompt,
+          selectedRatio.width,
+          selectedRatio.height,
           (message) => {
             setQueue(prev => prev.map(item => 
               item.id === pendingItem.id 

@@ -69,6 +69,8 @@ export class OpenAIService {
   async editImage(
     imageUrl: string, 
     prompt: string, 
+    width: number = 1024,
+    height: number = 1024,
     onProgress?: (message: string) => void
   ): Promise<string> {
     try {
@@ -101,7 +103,7 @@ export class OpenAIService {
           tools: [
             {
               type: 'image_generation',
-              size: '1024x1024',
+              size: `${width}x${height}`,
               quality: 'high',
               output_format: 'png'
             }
