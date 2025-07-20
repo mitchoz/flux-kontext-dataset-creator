@@ -158,7 +158,7 @@ const Index = () => {
       message: 'Waiting in queue...'
     };
 
-    setQueue(prev => [...prev, newItem]);
+    setQueue(prev => [newItem, ...prev]);
     
     toast.success("Added to generation queue!");
   };
