@@ -126,11 +126,38 @@ export const QueueItem = ({ item, onRemove, onDownload }: QueueItemProps) => {
                       className="w-full h-auto object-contain cursor-pointer hover:opacity-80 transition-opacity"
                       onClick={() => {
                         if (item.beforeImage.startsWith('blob:')) {
-                          // For blob URLs, open in new tab by creating a temporary link
-                          const link = document.createElement('a');
-                          link.href = item.beforeImage;
-                          link.target = '_blank';
-                          link.click();
+                          // For blob URLs, create a new window with proper HTML content
+                          const newWindow = window.open('', '_blank');
+                          if (newWindow) {
+                            newWindow.document.write(`
+                              <!DOCTYPE html>
+                              <html>
+                                <head>
+                                  <title>Image Preview</title>
+                                  <style>
+                                    body { 
+                                      margin: 0; 
+                                      padding: 20px; 
+                                      background: #000; 
+                                      display: flex; 
+                                      justify-content: center; 
+                                      align-items: center; 
+                                      min-height: 100vh; 
+                                    }
+                                    img { 
+                                      max-width: 100%; 
+                                      max-height: 100vh; 
+                                      object-fit: contain; 
+                                    }
+                                  </style>
+                                </head>
+                                <body>
+                                  <img src="${item.beforeImage}" alt="Full Size Image" />
+                                </body>
+                              </html>
+                            `);
+                            newWindow.document.close();
+                          }
                         } else {
                           // For regular URLs
                           window.open(item.beforeImage, '_blank');
