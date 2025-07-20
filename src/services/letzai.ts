@@ -19,7 +19,7 @@ export class LetzAIService {
     this.apiKey = apiKey;
   }
 
-  async generateImage(prompt: string, width: number = 1024, height: number = 1024): Promise<string> {
+  async generateImage(prompt: string, width: number = 1024, height: number = 1024, mode: string = 'turbo'): Promise<string> {
     const response = await fetch(`${this.baseUrl}/images`, {
       method: 'POST',
       headers: {
@@ -34,7 +34,7 @@ export class LetzAIService {
         creativity: 2,
         hasWatermark: false,
         systemVersion: 3,
-        mode: 'default'
+        mode
       })
     });
 

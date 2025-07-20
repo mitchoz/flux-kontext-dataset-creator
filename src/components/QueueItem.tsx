@@ -8,6 +8,7 @@ export interface QueueItemData {
   beforePrompt: string;
   afterPrompt: string;
   aspectRatio: string;
+  mode: string;
   timestamp: Date;
   status: 'pending' | 'letzai-processing' | 'openai-processing' | 'completed' | 'error';
   progress: number;

@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { PromptInput } from "@/components/PromptInput";
 import { ApiKeyInput } from "@/components/ApiKeyInput";
 import { AspectRatioSelector, aspectRatioOptions } from "@/components/AspectRatioSelector";
+import { ModeSelector, LetzAIMode } from "@/components/ModeSelector";
 import { GenerationQueue } from "@/components/GenerationQueue";
 import { QueueItemData } from "@/components/QueueItem";
 import { LetzAIService } from "@/services/letzai";
@@ -18,6 +19,7 @@ const Index = () => {
   const [letzaiApiKey, setLetzaiApiKey] = useState("");
   const [openaiApiKey, setOpenaiApiKey] = useState("");
   const [aspectRatio, setAspectRatio] = useState("1024x1024");
+  const [mode, setMode] = useState<LetzAIMode>("turbo");
   const [queue, setQueue] = useState<QueueItemData[]>([]);
   
   // Process queue automatically
@@ -42,7 +44,8 @@ const Index = () => {
         const imageId = await letzaiService.generateImage(
           pendingItem.beforePrompt,
           selectedRatio.width,
-          selectedRatio.height
+          selectedRatio.height,
+          pendingItem.mode
         );
 
         // Poll for completion
@@ -144,6 +147,7 @@ const Index = () => {
       beforePrompt,
       afterPrompt,
       aspectRatio,
+      mode,
       timestamp: new Date(),
       status: 'pending',
       progress: 0,
@@ -255,10 +259,16 @@ const Index = () => {
               />
             </div>
             
-            <AspectRatioSelector
-              value={aspectRatio}
-              onChange={setAspectRatio}
-            />
+            <div className="grid md:grid-cols-2 gap-6">
+              <AspectRatioSelector
+                value={aspectRatio}
+                onChange={setAspectRatio}
+              />
+              <ModeSelector
+                value={mode}
+                onChange={setMode}
+              />
+            </div>
             
             <Separator />
             
