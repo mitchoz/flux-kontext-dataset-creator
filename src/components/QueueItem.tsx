@@ -125,41 +125,18 @@ export const QueueItem = ({ item, onRemove, onDownload }: QueueItemProps) => {
                       alt="Before" 
                       className="w-full h-auto object-contain cursor-pointer hover:opacity-80 transition-opacity"
                       onClick={() => {
-                        if (item.beforeImage.startsWith('blob:')) {
-                          // For blob URLs, create a new window with proper HTML content
-                          const newWindow = window.open('', '_blank');
-                          if (newWindow) {
-                            newWindow.document.write(`
-                              <!DOCTYPE html>
-                              <html>
-                                <head>
-                                  <title>Image Preview</title>
-                                  <style>
-                                    body { 
-                                      margin: 0; 
-                                      padding: 20px; 
-                                      background: #000; 
-                                      display: flex; 
-                                      justify-content: center; 
-                                      align-items: center; 
-                                      min-height: 100vh; 
-                                    }
-                                    img { 
-                                      max-width: 100%; 
-                                      max-height: 100vh; 
-                                      object-fit: contain; 
-                                    }
-                                  </style>
-                                </head>
-                                <body>
-                                  <img src="${item.beforeImage}" alt="Full Size Image" />
-                                </body>
-                              </html>
-                            `);
-                            newWindow.document.close();
+                        if (item.beforeImage.startsWith('data:')) {
+                          // For data URLs, create a blob and open it
+                          const byteCharacters = atob(item.beforeImage.split(',')[1]);
+                          const byteNumbers = new Array(byteCharacters.length);
+                          for (let i = 0; i < byteCharacters.length; i++) {
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
                           }
+                          const byteArray = new Uint8Array(byteNumbers);
+                          const blob = new Blob([byteArray], { type: 'image/jpeg' });
+                          const url = URL.createObjectURL(blob);
+                          window.open(url, '_blank');
                         } else {
-                          // For regular URLs
                           window.open(item.beforeImage, '_blank');
                         }
                       }}
