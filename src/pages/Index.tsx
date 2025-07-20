@@ -24,9 +24,9 @@ const Index = () => {
   
   // Process queue automatically
   useEffect(() => {
-    const processNextItem = async () => {
-      const pendingItem = queue.find(item => item.status === 'pending');
-      if (!pendingItem || !letzaiApiKey || !openaiApiKey) return;
+    const processItem = async (itemId: string) => {
+      const pendingItem = queue.find(item => item.id === itemId && item.status === 'pending');
+      if (!pendingItem) return;
 
       const selectedRatio = aspectRatioOptions.find(option => option.value === pendingItem.aspectRatio);
       if (!selectedRatio) return;
@@ -121,14 +121,13 @@ const Index = () => {
       }
     };
 
-    // Check if we can process next item (only one at a time for now)
-    const isProcessing = queue.some(item => 
-      item.status === 'letzai-processing' || item.status === 'openai-processing'
-    );
-    
-    if (!isProcessing) {
-      processNextItem();
-    }
+    // Process all pending items simultaneously
+    const pendingItems = queue.filter(item => item.status === 'pending');
+    pendingItems.forEach(item => {
+      if (letzaiApiKey && openaiApiKey) {
+        processItem(item.id);
+      }
+    });
   }, [queue, letzaiApiKey, openaiApiKey]);
 
   const handleAddToQueue = () => {
